@@ -54,7 +54,7 @@ class _EditUserState extends ConsumerState<EditUser> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Add User',
+                  'Edit User',
                   style: TextStyle(fontSize: 30),
                 ),
                 const SizedBox(
@@ -124,7 +124,6 @@ class _EditUserState extends ConsumerState<EditUser> {
                           return;
                         }
 
-
                         try {
                           await DatabaseAPI().editUser(
                             firstName: _firstNameController.text.trim(),
@@ -140,7 +139,7 @@ class _EditUserState extends ConsumerState<EditUser> {
                           return;
                         }
                       },
-                      child: const Text('Add'),
+                      child: const Text('Edit'),
                     ),
                   ],
                 ),

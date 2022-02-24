@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_add_screen_assignment/database_api.dart';
 import 'package:login_add_screen_assignment/home_screen.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends ConsumerWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
+  static final TextEditingController _userNamecontroller = TextEditingController();
+  static final TextEditingController _passwordcontroller = TextEditingController();
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: Center(
         child: SizedBox(
@@ -28,8 +33,9 @@ class LoginScreen extends StatelessWidget {
                   const SizedBox(
                     height: 10,
                   ),
-                  const TextField(
-                    decoration: InputDecoration(
+                  TextField(
+                    controller: _userNamecontroller,
+                    decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.all(8.0),
                       isDense: true,
@@ -42,8 +48,9 @@ class LoginScreen extends StatelessWidget {
                   const SizedBox(
                     height: 10,
                   ),
-                  const TextField(
-                    decoration: InputDecoration(
+                  TextField(
+                    controller: _passwordcontroller,
+                    decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.all(8.0),
                       isDense: true,
@@ -55,7 +62,17 @@ class LoginScreen extends StatelessWidget {
                   Align(
                     alignment: Alignment.centerRight,
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        if (!await DatabaseAPI().login(
+                          _userNamecontroller.text.trim(),
+                          _passwordcontroller.text.trim(),
+                        )) return;
+
+                        await ref.read(userListProvider.notifier).init();
+
+                        _userNamecontroller.clear();
+                        _passwordcontroller.clear();
+
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(

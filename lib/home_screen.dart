@@ -1,16 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:login_add_screen_assignment/add_user.dart';
+import 'package:login_add_screen_assignment/database_api.dart';
 import 'package:login_add_screen_assignment/edit_user.dart';
 import 'package:login_add_screen_assignment/login_screen.dart';
+import 'package:login_add_screen_assignment/user_data_class.dart';
+import 'package:login_add_screen_assignment/user_list_provider.dart';
 
-class HomeScreen extends StatelessWidget {
+final userListProvider = StateNotifierProvider<UserListProvider, List<User>>((ref) {
+  return UserListProvider();
+});
+
+final userDataProvider = StateProvider<User>((ref) {
+  return User.empty();
+});
+
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
+@override
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home Screen'),
+        centerTitle: true,
         actions: [
           _logout(context),
         ],
@@ -25,8 +38,8 @@ class HomeScreen extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _dataTable(),
-                  _buttons(context),
+                  _dataTable(ref),
+                  _buttons(context, ref),
                 ],
               ),
             ),
@@ -36,103 +49,68 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  TextButton _logout(BuildContext context) {
-    return TextButton.icon(
-      onPressed: () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) {
-              return const LoginScreen();
-            },
-          ),
-        );
-      },
-      icon: const Icon(Icons.logout),
-      label: const Text('Log Out'),
-    );
-  }
-
-  Expanded _dataTable() {
-    return Expanded(
-      child: DataTable(
-        showBottomBorder: true,
-        columns: <DataColumn>[
-          const DataColumn(
-            label: Text(
-              'User ID',
-              style: TextStyle(fontStyle: FontStyle.italic, fontSize: 20),
-            ),
-          ),
-          const DataColumn(
-            label: Text(
-              'Username',
-              style: TextStyle(fontStyle: FontStyle.italic, fontSize: 20),
-            ),
-          ),
-          DataColumn(
-            onSort: (columnIndex, ascending) {},
-            label: const Text(
-              'First Name',
-              style: TextStyle(fontStyle: FontStyle.italic, fontSize: 20),
-            ),
-          ),
-          const DataColumn(
-            label: Text(
-              'Last Name',
-              style: TextStyle(fontStyle: FontStyle.italic, fontSize: 20),
-            ),
-          ),
-          const DataColumn(
-            label: Text(
-              'Password',
-              style: TextStyle(fontStyle: FontStyle.italic, fontSize: 20),
-            ),
-          ),
-        ],
-        rows: const [
-          DataRow(
-            cells: <DataCell>[
-              DataCell(Text('6Xo5Zg484Pz5Hle')),
-              DataCell(Text('Gelo')),
-              DataCell(Text('John Angelo')),
-              DataCell(Text('Cordero')),
-              DataCell(Text('password123')),
-            ],
-          ),
-          DataRow(
-            cells: <DataCell>[
-              DataCell(Text('oLrh7z1e7juF8nl')),
-              DataCell(Text('JohnGee')),
-              DataCell(Text('John Gee')),
-              DataCell(Text('Mondragon')),
-              DataCell(Text('example12356789')),
-            ],
-          ),
-          DataRow(
-            cells: <DataCell>[
-              DataCell(Text('iifZfm1kZWfNWXK')),
-              DataCell(Text('Jekoy')),
-              DataCell(Text('Jericho')),
-              DataCell(Text('Pastrana')),
-              DataCell(Text('test54321')),
-            ],
-          ),
-          DataRow(
-            cells: <DataCell>[
-              DataCell(Text('j28KC4SSRPccHGV')),
-              DataCell(Text('Kelah')),
-              DataCell(Text('James Heschel')),
-              DataCell(Text('Medina')),
-              DataCell(Text('gwapoako12')),
-            ],
-          ),
-        ],
+  List<DataColumn> columns() {
+    return const <DataColumn>[
+      DataColumn(
+        label: Text(
+          'User ID',
+          style: TextStyle(fontStyle: FontStyle.italic, fontSize: 20),
+        ),
       ),
-    );
+      DataColumn(
+        label: Text(
+          'Username',
+          style: TextStyle(fontStyle: FontStyle.italic, fontSize: 20),
+        ),
+      ),
+      DataColumn(
+        label: Text(
+          'First Name',
+          style: TextStyle(fontStyle: FontStyle.italic, fontSize: 20),
+        ),
+      ),
+      DataColumn(
+        label: Text(
+          'Last Name',
+          style: TextStyle(fontStyle: FontStyle.italic, fontSize: 20),
+        ),
+      ),
+      DataColumn(
+        label: Text(
+          'Password',
+          style: TextStyle(fontStyle: FontStyle.italic, fontSize: 20),
+        ),
+      ),
+    ];
   }
 
-  Padding _buttons(BuildContext context) {
+  List<DataRow> rows(WidgetRef ref) {
+    List<DataRow> _list = [];
+
+    String selectedID = ref.watch(userDataProvider).userID;
+
+    ref.watch(userListProvider).forEach((element) {
+      _list.add(
+        DataRow(
+          selected: selectedID == element.userID,
+          onSelectChanged: (selected) {
+            ref.watch(userDataProvider.state).state = element;
+          },
+          cells: [
+            DataCell(Text(element.userID)),
+            DataCell(Text(element.userName)),
+            DataCell(Text(element.firstName)),
+            DataCell(Text(element.lastName)),
+            DataCell(Text(element.password)),
+          ],
+        ),
+      );
+    });
+
+    return _list;
+  }
+
+  Padding _buttons(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(50.0, 30.0, 0, 30.0),
       child: Column(
@@ -153,10 +131,12 @@ class HomeScreen extends StatelessWidget {
           ElevatedButton(
             style: ElevatedButton.styleFrom(fixedSize: const Size(150, 80)),
             onPressed: () {
-                showDialog(
+              showDialog(
                 context: context,
                 builder: (context) {
-                  return const EditUser();
+                  return EditUser(
+                    user: ref.read(userDataProvider),
+                  );
                 },
               );
             },
@@ -164,11 +144,53 @@ class HomeScreen extends StatelessWidget {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(fixedSize: const Size(150, 80)),
-            onPressed: () {},
+            onPressed: () async {
+              String _selectedID = ref.read(userDataProvider).userID;
+
+              await DatabaseAPI().deleteUser(_selectedID);
+
+              await ref.read(userListProvider.notifier).reset();
+            },
             child: const Text('Delete'),
           ),
+          ElevatedButton(
+              style: ElevatedButton.styleFrom(fixedSize: const Size(150, 80)),
+              onPressed: () {
+                ref.read(userListProvider.notifier).reset();
+              },
+              child: const Text('Refresh')),
         ],
       ),
     );
   }
-}
+
+  Widget _dataTable(WidgetRef ref) {
+    return Expanded(
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: DataTable(
+          showCheckboxColumn: false,
+          showBottomBorder: true,
+          columns: columns(),
+          rows: rows(ref),
+        ),
+      ),
+    );
+  }
+
+  TextButton _logout(BuildContext context) {
+    return TextButton.icon(
+      onPressed: () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) {
+              return const LoginScreen();
+            },
+          ),
+        );
+      },
+      icon: const Icon(Icons.logout),
+      label: const Text('Log Out'),
+    );
+  }}

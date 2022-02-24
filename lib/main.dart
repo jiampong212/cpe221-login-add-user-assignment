@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:login_add_screen_assignment/home_screen.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:login_add_screen_assignment/login_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -15,7 +17,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.light(),
       darkTheme: ThemeData.dark(),
       themeMode: ThemeMode.dark,
-      home: const HomeScreen(),
+      home: const LoginScreen(),
+      builder: EasyLoading.init(),
     );
   }
 }
